@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:cache="http://www.springframework.org/schema/cache"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context 
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd
+            http://www.springframework.org/schema/aop 
+            http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+            http://www.springframework.org/schema/tx 
+            http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+            http://www.springframework.org/schema/mvc 
+            http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+            http://www.springframework.org/schema/context 
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd
+            http://www.springframework.org/schema/cache
+            http://www.springframework.org/schema/cache/spring-cache-4.1.xsd
+            http://www.springframework.org/schema/task 
+  			http://www.springframework.org/schema/task/spring-task.xsd">
+            
+       
+	<!-- <bean name="/hello" class="org.fkit.controller.HelloController" /> -->
+	<!-- <bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/> -->
+	<!-- <bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter" /> -->
+	<!-- 拦截器配置不能放在后面要不然不起作用 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/*"/>
+			<bean class="org.fkit.interceptor.Authinterceptor"></bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	
+	
+	
+	<!-- 配置转换器 -->
+	<!-- converter转换器 -->
+    <!--  
+	<mvc:annotation-driven conversion-service="conversionService"/>
+	<bean id="conversionService"
+	class="org.springframework.context.support.ConversionServiceFactoryBean">
+		<property name="converters">
+			<list>
+				<bean class="org.fkit.converter.StringtoDateConverter" >
+					<constructor-arg type="java.lang.String" value="MM-dd-yyyy" />
+				</bean>
+				<bean class="org.fkit.converter.StringtoIntConverter" />
+			</list>
+		</property>
+	</bean>
+	-->
+		 
+	<!-- formatter转换器 -->
+	<!-- 
+	<context:component-scan base-package="org.fkit.formatter"/>
+	<mvc:annotation-driven conversion-service="conversionService"/>
+	<bean id="conversionService"
+	class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+	<property name="formatters">
+		<set>
+			<bean class="org.fkit.formatter.DataFormatter" >
+				<constructor-arg type="java.lang.String" value="MM-dd-yyyy"/>
+			</bean>
+		</set>
+	</property>
+	</bean>
+	  -->
+	  
+	  
+	<!--spring内置formatter转换器  --> 
+	<!-- 
+	<mvc:annotation-driven conversion-service="conversionService"/>
+	<bean id="conversionService"
+	class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+	<property name="formatters">
+		<set>
+			<bean class="org.springframework.format.datetime.DateFormatter"  p:pattern="MM-dd-yyyy" />
+		</set>
+	</property>
+	</bean>
+	 -->
+	<!-- aop切面 -->
+	<context:component-scan base-package="org.fkit.service.impl,org.fkit.aspect">
+		<context:include-filter type="annotation" expression="org.aspectj.lang.annotation.Aspect"/>
+	</context:component-scan>
+	<aop:aspectj-autoproxy/>
+ 
+	
+	
+	
+	
+	<context:component-scan base-package="org.fkit.controller"/>
+	<context:component-scan base-package="org.fkit.service"/>
+	<!-- 缓存 -->
+	<cache:annotation-driven cache-manager="cacheManager"/>
+    <bean id="cacheManagerFactory" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+        <property name="configLocation" value="classpath:ehcache.xml"/>
+    </bean>
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+        <property name="cacheManager" ref="cacheManagerFactory"/>
+    </bean>
+    
+    
+      <!-- shiro开启事务注解 -->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager" />
+    </bean>
+    
+    <!-- 
+        /**  除了已经设置的其他路径的认证
+     -->
+    <!-- shiro工厂bean配置 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- shiro的核心安全接口 -->
+        <property name="securityManager" ref="securityManager"></property>
+        <!-- 要求登录时的连接 -->
+        <property name="loginUrl" value="/manage/login"></property>
+        <!-- 登录成功后要跳转的连接(此处已经在登录中处理了) -->
+        <!-- <property name="successUrl" value="/index.jsp"></property> -->
+        <!-- 未认证时要跳转的连接 -->
+        <property name="unauthorizedUrl" value="/manage/register"></property>
+        <!-- shiro连接约束配置 -->
+        <property name="filterChainDefinitions">
+            <value>
+                <!-- 对静态资源设置允许匿名访问 -->
+                /images/** = anon
+                /js/** = anon
+                /css/** = anon
+                <!-- 可匿名访问路径，例如：验证码、登录连接、退出连接等 -->
+                /auth/login = anon
+                /manage/register = anon
+                <!-- 剩余其他路径，必须认证通过才可以访问 -->
+                /** = authc
+            </value>
+        </property>
+    </bean>
+    
+    <!-- 配置shiro安全管理器 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realms" ref="customRealm"></property>
+    </bean>
+    
+    <!-- 自定义Realm -->
+    <bean id="customRealm" class="org.fkit.common.UserRealm">
+        <property name="credentialsMatcher" ref="credentialsMatcher"></property>
+    </bean>
+    
+    <!-- 配置凭证算法匹配器 -->
+    <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <!-- Md5算法 -->
+        <property name="hashAlgorithmName" value="Md5"></property>
+    </bean>
+    
+    
+	 
+	<!-- 扫描定时任务包，该种定时任务不易实现动态定时任务  -->
+    <context:component-scan base-package="org.fkit.task"/>
+    <!-- 指定线程池大小 -->
+    <task:executor id="executor" pool-size="5" />  
+	<task:scheduler id="scheduler" pool-size="10" />  
+	<task:annotation-driven executor="executor" scheduler="scheduler" />
+	
+	<!-- quartz定时任务配置可以实现动态定时任务 -->
+	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" />
+	
+	<!-- 自动注册下面两个文件 -->
+	<mvc:annotation-driven/>
+	<!-- <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" />
+	<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter" /> -->
+	<!-- 使用默认的servlet来响应静态文件 -->
+	<mvc:default-servlet-handler/> 
+	<bean id="ViewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver" >	
+		<!-- 视图前缀 -->
+		<property name="prefix">
+			<value>/WEB-INF/content/</value>
+		</property>
+		<!-- 视图后缀 -->
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+	<!-- 文件上传配置 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize">
+			<value>10485760</value>
+		</property>
+		<property name="defaultEncoding">
+			<value>UTF-8</value>
+		</property>
+	</bean>
+	
+	<!-- 多线程  -->
+	
+	<bean id="taskExecutor"  
+        class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">  
+        <!-- 核心线程数 -->  
+        <property name="corePoolSize" value="3" />  
+        <!-- 最大线程数 -->  
+        <property name="maxPoolSize" value="10" />  
+        <!-- 队列最大长度 >=mainExecutor.maxSize -->  
+        <property name="queueCapacity" value="25" />  
+        <!-- 线程池维护线程所允许的空闲时间 -->  
+        <property name="keepAliveSeconds" value="300" />  
+        <!-- 线程池对拒绝任务(无线程可用)的处理策略 ThreadPoolExecutor.CallerRunsPolicy策略 ,调用者的线程会执行该任务,如果执行器已关闭,则丢弃.  -->  
+        <property name="rejectedExecutionHandler">  
+            <bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy" />  
+        </property>  
+    </bean>  
+    
+    
+    
+  
+	
+	<!-- 
+	<context:property-placeholder location="classpath:/redis.properties" ignore-unresolvable="true" /> 
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        
+        <property name="maxTotal">
+            <value>${redis.pool.maxActive}</value>
+        </property>
+        <property name="maxIdle">
+            <value>${redis.pool.maxIdle}</value>
+        </property>
+        <property name="testOnBorrow" value="true"/>
+        <property name="testOnReturn" value="true"/>
+    </bean>
+
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg name="poolConfig" ref="jedisPoolConfig" />
+        <constructor-arg name="host" value="${redis.host}" />
+        <constructor-arg name="port" value="${redis.port}" type="int" />
+        <constructor-arg name="timeout" value="${redis.timeout}" type="int" />
+        <constructor-arg name="password" value="${redis.password}" />
+        <constructor-arg name="database" value="${redis.database}" type="int" />
+    </bean>
+	-->
+</beans>

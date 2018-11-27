@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <!-- 命名空间，可以指向接口文件也可以执行本文件，指向本文件不需要通过接口调用 -->
+<mapper namespace="org.fkit.MapperXml.UserMapper">
+<!-- user使用别名 -->
+<insert id="insertUser" parameterType="user">
+	<selectKey keyProperty="id" resultType="int" order="BEFORE">
+		select Q_SQE_TEST_ID.nextval as id from dual
+	</selectKey>
+	insert into TB_USER(id,name,sex,age)values(#{id},#{name},#{sex},#{age})
+</insert>
+
+<resultMap type="student" id="studentResultMap">
+	<id property="id" column="id"></id>
+	<result property="name" column="name"/>
+	<result property="sex" column="sex"/>
+	<result property="age" column="age"/>
+	<association property="clazz" column="class_id" javaType="clazz" select="selectClazzWithId"/>
+	<association property="card" column="card_id" select="selectCard" javaType="card"/>
+</resultMap>
+<select id="selectClazzWithId" resultType="clazz">
+	select * from tb_class where id=#{id}
+</select>
+<select id="selectStudent" resultMap="studentResultMap">
+	select * from tb_student
+</select>
+
+<!-- 要开启懒加载开关 -->
+<resultMap type="clazz" id="clazzResultMap">
+	<id property="id" column="id"/>
+	<result property="code" column="code"/>
+	<collection property="students" javaType="ArrayList" 
+	column="id" ofType="student" select="selectStudentWithId"  fetchType="lazy" >
+	<id property="id" column="id" />
+	<result property="name" column="name"/>
+	<result property="sex" column="sex"/>
+	<result property="age" column="age"/>
+	</collection>
+</resultMap>
+<select id="selectStudentWithId" resultType="student">
+	select * from tb_student where class_id=#{id}
+</select>
+<select id="selectCalzz" resultMap="clazzResultMap">
+	select * from tb_class
+</select>
+
+
+<select id="studentInfo"  resultMap="studentMap">
+	select * from tb_student
+</select>
+<resultMap type="student" id="studentMap">
+	<id property="id" column="id"/>
+	<result property="name" column="name"/>
+	<result property="sex" column="sex"/>
+	<result property="age" column="age"/>
+	<association property="card" column="card_id"
+	select="selectCard" javaType="card"/>
+</resultMap>
+<select id="selectCard" resultType="card">
+	select * from tb_card where id=#{card_id}
+</select>
+
+
+
+
+
+<select id="selectCourse" resultMap="resultCourseMap">
+	select * from tb_course
+</select>
+
+
+<resultMap type="course" id="resultCourseMap">
+	<id property="id" column="id"/>
+	<result property="name" column="name"/>
+	<collection property="students" javaType="ArrayList" 
+	column="id" ofType="student" select="selectStudentById"  fetchType="lazy" >
+		<id property="id" column="id" />
+		<result property="name" column="name"/>
+		<result property="sex" column="sex"/>
+		<result property="age" column="age"/>
+		<association property="clazz" column="class_id" javaType="clazz" select="selectClazzWithId">
+			<id property="id" column="id" />
+			<result property="code" column="code"/>
+		</association>
+	</collection>
+	<collection property="clazzs" javaType="ArrayList" 
+	column="id" ofType="clazz" select="selectClazzById"  fetchType="lazy" >
+		<id property="id" column="id" />
+		<result property="code" column="code"/>
+	</collection>
+</resultMap>
+<select id="selectStudentById" parameterType="int" resultType="student">
+	select * from tb_student where id in(select student_id from tb_course_student where course_id=#{id})
+</select>
+<select id="selectClazzById" parameterType="int" resultType="clazz">
+	select * from tb_class where id in(select clazz_id from tb_course_clazz where course_id=#{id})
+</select>	
+
+
+	
+</mapper>	
+	

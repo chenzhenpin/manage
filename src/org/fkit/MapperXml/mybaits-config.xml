@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+	PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+	<properties>
+		<property name="dialect" value="oracle"/>
+	</properties>
+	
+	<settings>
+		<setting name="defaultStatementTimeout" value="10000000" />
+		<!-- 配置sql语句输入到日志文件，还是直接打印 -->
+		<!-- <setting name="logImpl" value="LOG4J" /> -->
+		<setting name="logImpl" value="STDOUT_LOGGING" />
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<setting name="aggressiveLazyLoading" value="false"/> 
+	</settings>
+	<!-- 别名设置自动扫描该包下面的类 -->
+	<typeAliases>
+		<package name="org.fkit.table"/>
+	</typeAliases>
+	
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC" />
+			
+			 <dataSource type="POOLED">
+				<property name="driver" value="oracle.jdbc.driver.OracleDriver" />
+				<!--   -->
+				 
+				<property name="url" value="jdbc:oracle:thin:@127.0.0.1:1521:ORCL" /> 
+				 <!-- <property name="url" value="jdbc:oracle:thin:@192.168.97.242:1521:oracle" />  -->
+				 
+				<!--<property name="url" value="jdbc:oracle:thin:@10.5.5.100:1521:ORCL" />-->
+				<property name="username" value="hdwsManagement" />
+				<property name="password" value="hdwsManagement" />
+				<property name="poolMaximumActiveConnections" value="100" />
+				<property name="poolMaximumCheckoutTime" value="10000000"/>
+			</dataSource>  
+			
+			
+			<!--  <dataSource type="JNDI">
+				<property name="context.java.naming.factory.initial" value="weblogic.jndi.WLInitialContextFactory" />
+				<property name="context.java.naming.provider.url" value="t3://localhost:7001" />
+				<property name="data_source" value="local" />
+			</dataSource>-->
+		
+			
+			
+		</environment>
+	</environments>	
+
+	<mappers>
+		<mapper resource="org/fkit/MapperXml/UserMapper.xml" /> 
+		<mapper resource="org/fkit/MapperXml/TestMapper.xml" /> 
+	</mappers>
+		
+	
+</configuration>

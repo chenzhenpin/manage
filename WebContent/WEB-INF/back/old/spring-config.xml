@@ -1,0 +1,112 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:cache="http://www.springframework.org/schema/cache"	
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.1.xsd 
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.1.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-4.1.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+		http://www.springframework.org/schema/cache
+		http://www.springframework.org/schema/cache/spring-cache-4.1.xsd 
+		http://www.springframework.org/schema/task 
+  		http://www.springframework.org/schema/task/spring-task-4.1.xsd">
+            
+
+		 
+	<!-- formatter转换器 -->
+	<!-- 
+	<context:component-scan base-package="org.fkit.formatter"/>
+	  -->
+	  
+	  
+	
+	<!-- aop切面 -->
+	<context:component-scan base-package="org.fkit.service.impl,org.fkit.aspect">
+		<context:include-filter type="annotation" expression="org.aspectj.lang.annotation.Aspect"/>
+	</context:component-scan>
+	<aop:aspectj-autoproxy/> 
+ 
+	
+	
+	
+	
+	
+	<context:component-scan base-package="org.fkit.service"/>
+	<context:component-scan base-package="org.fkit.entity"/>
+
+	<!-- 缓存 -->
+	<cache:annotation-driven cache-manager="cacheManager"/>
+    <bean id="cacheManagerFactory" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+        <property name="configLocation" value="classpath:ehcache.xml"/>
+    </bean>
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+        <property name="cacheManager" ref="cacheManagerFactory"/>
+    </bean>
+    
+
+	 
+	<!-- 扫描定时任务包，该种定时任务不易实现动态定时任务  -->
+    <context:component-scan base-package="org.fkit.task"/>
+    <!-- 指定线程池大小 -->
+    <task:executor id="executor" pool-size="5" />  
+	<task:scheduler id="scheduler" pool-size="10" />  
+	<task:annotation-driven executor="executor" scheduler="scheduler" />
+	
+	<!-- quartz定时任务配置可以实现动态定时任务 -->
+	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" />
+	
+	
+	<!-- 文件上传配置 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize">
+			<value>10485760</value>
+		</property>
+		<property name="defaultEncoding">
+			<value>UTF-8</value>
+		</property>
+	</bean>
+	
+	<!-- 多线程  -->
+	
+	<bean id="taskExecutor"  
+        class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">  
+        <!-- 核心线程数 -->  
+        <property name="corePoolSize" value="3" />  
+        <!-- 最大线程数 -->  
+        <property name="maxPoolSize" value="10" />  
+        <!-- 队列最大长度 >=mainExecutor.maxSize -->  
+        <property name="queueCapacity" value="25" />  
+        <!-- 线程池维护线程所允许的空闲时间 -->  
+        <property name="keepAliveSeconds" value="300" />  
+        <!-- 线程池对拒绝任务(无线程可用)的处理策略 ThreadPoolExecutor.CallerRunsPolicy策略 ,调用者的线程会执行该任务,如果执行器已关闭,则丢弃.  -->  
+        <property name="rejectedExecutionHandler">  
+            <bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy" />  
+        </property>  
+    </bean>  
+    
+   
+    
+    
+    <!-- 开启aop，对类代理 -->
+	<aop:config proxy-target-class="true"></aop:config>
+	<!-- 开启shiro注解支持 -->
+	<bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+		<property name="securityManager" ref="securityManager" />
+	</bean>
+	
+	
+	<!-- 定义统一异常处理器 -->
+	<bean class="org.fkit.exception.CustomExceptionResolver"></bean>
+	
+	
+  	
+</beans>
